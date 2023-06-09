@@ -7,6 +7,8 @@ import Cors from 'cors'
 import { driveApi, cacheControlHeader } from '../../../config/api.config'
 import { encodePath, getAccessToken, checkAuthRoute } from '.'
 
+import siteConfig from '../../../config/site.config'
+
 // CORS middleware for raw links: https://nextjs.org/docs/api-routes/api-middlewares
 export function runCorsMiddleware(req: NextApiRequest, res: NextApiResponse) {
   const cors = Cors({ methods: ['GET', 'HEAD'] })
@@ -80,6 +82,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         res.writeHead(200, headers as AxiosResponseHeaders)
         stream.pipe(res)
       } else {
+        // Replace Download Url
+        if (siteConfig.downProxy) {
+          data['@microsoft.graph.downloadUrl'] = data['@microsoft.graph.downloadUrl'].split(siteConfig.downLink_old).join(siteConfig.downLink_new);
+        }
         res.redirect(data['@microsoft.graph.downloadUrl'])
       }
     } else {
