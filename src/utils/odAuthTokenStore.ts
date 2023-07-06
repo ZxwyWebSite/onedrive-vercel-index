@@ -1,9 +1,10 @@
-import Redis from 'ioredis'
+//import Redis from 'ioredis'
 import siteConfig from '../../config/site.config'
+import { KVNamespace } from '@cloudflare/workers-types'
 
 // Persistent key-value store is provided by Redis, hosted on Upstash
 // https://vercel.com/integrations/upstash
-const kv = new Redis(siteConfig.redisUrl || '')
+declare const kv: KVNamespace
 
 export async function getOdAuthTokens(): Promise<{ accessToken: unknown; refreshToken: unknown }> {
   const accessToken = await kv.get(`${siteConfig.kvPrefix}access_token`)
@@ -24,6 +25,6 @@ export async function storeOdAuthTokens({
   accessTokenExpiry: number
   refreshToken: string
 }): Promise<void> {
-  await kv.set(`${siteConfig.kvPrefix}access_token`, accessToken, 'EX', accessTokenExpiry)
-  await kv.set(`${siteConfig.kvPrefix}refresh_token`, refreshToken)
+  await kv.put(`${siteConfig.kvPrefix}access_token`, accessToken, {expirationTtl: accessTokenExpiry})
+  await kv.put(`${siteConfig.kvPrefix}refresh_token`, refreshToken)
 }
